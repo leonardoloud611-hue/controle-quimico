@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Materiais Químicos</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;margin:0;padding:20px}
+h1{margin-bottom:10px}
+.container{display:grid;grid-template-columns:1fr 2fr;gap:20px}
+.card{background:white;padding:20px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1)}
+input,button{width:100%;padding:8px;margin-top:6px;margin-bottom:10px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}
+.status-ok{color:green;font-weight:bold}
+.status-warning{color:orange;font-weight:bold}
+.status-expired{color:red;font-weight:bold}
+img{width:50px;height:50px;object-fit:cover;border-radius:6px}
+button{cursor:pointer;background:#2c7be5;color:white;border:none;border-radius:6px}
+button:hover{opacity:0.9}
+</style>
+</head>
+<body>
+
+<h1>Controle de Materiais Químicos</h1>
+
+<div class="container">
+
+<div class="card">
+<h2>Cadastrar Material</h2>
+<label>Nome</label>
+<input id="nome">
+
+<label>Quantidade</label>
+<input id="quantidade">
+
+<label>Local</label>
+<input id="local">
+
+<label>Data de Vencimento</label>
+<input type="date" id="vencimento">
+
+<label>Imagem (URL)</label>
+<input id="imagem">
+
+<button onclick="adicionarMaterial()">Adicionar</button>
+</div>
+
+<div class="card">
+<h2>Materiais</h2>
+<table>
+<thead>
+<tr>
+<th>Imagem</th>
+<th>Material</th>
+<th>Qtd</th>
+<th>Local</th>
+<th>Vencimento</th>
+<th>Status</th>
+<th>Ação</th>
+</tr>
+</thead>
+<tbody id="tabela"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+let materiais = JSON.parse(localStorage.getItem("materiais")) || []
+
+function salvar(){
+localStorage.setItem("materiais", JSON.stringify(materiais))
+}
+
+function calcularStatus(data){
+const hoje = new Date()
+const venc = new Date(data)
+const diff = (venc-hoje)/(1000*60*60*24)
+
+if(diff < 0) return {texto:"Vencido",classe:"status-expired"}
+if(diff <= 30) return {texto:"Próximo",classe:"status-warning"}
+return {texto:"Válido",classe:"status-ok"}
+}
+
+function adicionarMaterial(){
+const material = {
+nome:document.getElementById("nome").value,
+quantidade:document.getElementById("quantidade").value,
+local:document.getElementById("local").value,
+vencimento:document.getElementById("vencimento").value,
+imagem:document.getElementById("imagem").value
+}
+
+materiais.push(material)
+salvar()
+render()
+}
+
+function remover(index){
+materiais.splice(index,1)
+salvar()
+render()
+}
+
+function render(){
+const tabela=document.getElementById("tabela")
+tabela.innerHTML=""
+
+materiais.forEach((m,i)=>{
+const status = calcularStatus(m.vencimento)
+
+const linha=`
+<tr>
+<td><img src="${m.imagem}"/></td>
+<td>${m.nome}</td>
+<td>${m.quantidade}</td>
+<td>${m.local}</td>
+<td>${m.vencimento}</td>
+<td class="${status.classe}">${status.texto}</td>
+<td><button onclick="remover(${i})">Excluir</button></td>
+</tr>
+`
+
+tabela.innerHTML += linha
+})
+}
+
+render()
+</script>
+
+</body>
+</html>
